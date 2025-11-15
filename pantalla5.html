@@ -20,10 +20,7 @@
       overflow: hidden;
     }
 
-    h2 {
-      margin-bottom: 10px;
-      text-align: center;
-    }
+    h2 { margin-bottom: 10px; text-align: center; }
 
     canvas {
       display: block;
@@ -42,18 +39,28 @@
       cursor: pointer;
     }
 
-    .limpiar {
-      background: gray;
-      color: white;
-    }
+    .limpiar { background: gray; color: white; }
+    .continuar { background: #388e3c; color: white; }
 
-    .continuar {
-      background: #388e3c;
-      color: white;
-    }
+    .botones { margin-top: 10px; }
 
-    .botones {
+    .cincho-box {
+      background: white;
+      padding: 12px;
+      border-radius: 10px;
       margin-top: 10px;
+      width: 90%;
+      max-width: 350px;
+      text-align: center;
+    }
+
+    .cincho-box input {
+      width: 85%;
+      padding: 10px;
+      border: 1px solid #999;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 16px;
     }
 
     @media screen and (orientation: portrait) {
@@ -80,9 +87,19 @@
 
   <canvas id="canvas"></canvas>
 
+  <!-- 🔵 CAPTURA DIRECTA DE FOLIO DE CINCHO -->
+  <div class="cincho-box">
+    <h3>🚚 Folio de Cincho</h3>
+    <input type="text" id="folioCincho" placeholder="Ej. CIN-00245">
+
+    <label style="font-size:16px;">
+      <input type="checkbox" id="noCamion"> No es camión
+    </label>
+  </div>
+
   <div class="botones">
     <button class="limpiar" onclick="limpiar()">🧹 Limpiar</button>
-    <button class="continuar" onclick="guardar()">✅ Finalizar</button>
+    <button class="continuar" onclick="guardar()">✅ Continuar</button>
   </div>
 
 <script>
@@ -92,7 +109,7 @@
   // Ajustar tamaño del canvas
   function ajustarCanvas() {
     canvas.width = window.innerWidth * 0.9;
-    canvas.height = window.innerHeight * 0.65;
+    canvas.height = window.innerHeight * 0.55;
   }
 
   ajustarCanvas();
@@ -134,7 +151,7 @@
     ctx.moveTo(pos.x, pos.y);
   }
 
-  // Eventos de mouse
+  // Eventos mouse
   canvas.addEventListener("mousedown", () => dibujando = true);
   canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
   canvas.addEventListener("mousemove", dibujar);
@@ -150,9 +167,23 @@
   }
 
   function guardar() {
+
+    const folioCincho = document.getElementById("folioCincho").value.trim();
+    const noCamion = document.getElementById("noCamion").checked;
+
+    if (!noCamion && folioCincho === "") {
+      alert("⚠️ Debes ingresar el folio de cincho o marcar 'No es camión'");
+      return;
+    }
+
+    // Guardar firma
     const firma = canvas.toDataURL("image/png");
     localStorage.setItem("firmaRecibe", firma);
 
+    // Guardar cincho
+    localStorage.setItem("folioCincho", noCamion ? "" : folioCincho);
+
+    // Continuar
     window.location.href = "pantalla6.html";
   }
 </script>
