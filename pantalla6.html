@@ -107,6 +107,35 @@
         display: none !important;
       }
     }
+.firmas-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.firmas-vertical div {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.firmas-vertical img {
+  width: 90%;
+  max-width: 260px;
+  height: 110px;
+  border: 1px solid #000;
+  border-radius: 6px;
+  background: white;
+}
+
+@media print {
+  .firmas-vertical img {
+    width: 95% !important;
+    height: 60px !important;
+    filter: contrast(180%);
+  }
+}
 
   </style>
 </head>
@@ -127,18 +156,20 @@
 
   <h3 id="folioCinchoMostrar" style="text-align:center;margin-top:10px;"></h3>
 
-  <div class="firmas">
-    <div>
-      <p>Firma quien entrega</p>
-      <img id="firmaEntrega">
-    </div>
-    <div>
-      <p>Firma quien recibe</p>
-      <img id="firmaRecibe">
-    </div>
+<div class="firmas-vertical">
+  <div>
+    <p>Firma quien entrega</p>
+    <img id="firmaEntrega" src="">
   </div>
 
-  <button class="no-print" onclick="guardarSalida()">💾 Guardar salida</button>
+  <div>
+    <p>Firma quien recibe</p>
+    <img id="firmaRecibe" src="">
+  </div>
+</div>
+
+
+ <button class="no-print" onclick="guardarEnFirebase()">💾 Guardar salida</button>
   <button class="secondary no-print" onclick="imprimir()">🖨️ Imprimir</button>
 </div>
 
@@ -269,10 +300,14 @@ async function confirmarCincho() {
     return;
   }
 
-  await guardarEnFirebase(cincho, noCamion);
+  // Guardar cincho en localStorage INMEDIATAMENTE
+  localStorage.setItem("folioCincho", noCamion ? "" : cincho);
+
+  document.getElementById("folioCinchoMostrar").textContent =
+    noCamion ? "" : ("🚚 Folio de Cincho: " + cincho);
+
+  cerrarModalCincho();
 }
-
-
 // ======================================================
 // GUARDAR EN FIRESTORE
 // ======================================================
@@ -323,10 +358,15 @@ function imprimir() {
 
 // ======================================================
 document.addEventListener("DOMContentLoaded", async () => {
+
   await obtenerFolio();
   cargarResumen();
+
+  // 🔥 Mostrar modal cincho automáticamente
+  setTimeout(() => {
+    document.getElementById("modalCincho").style.display = "flex";
+  }, 400);
 });
 </script>
-
 </body>
 </html>
