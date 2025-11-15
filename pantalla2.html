@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Salida de Productos – Zapata V2</title>
+  <title>Agregar productos - Zapata (Automático)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
+      font-family: Arial, sans-serif;
       background: linear-gradient(to right, #00416A, #E4E5E6);
       margin: 0;
       padding: 0;
@@ -21,10 +21,10 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      opacity: 0.15;
-      z-index: 0;
+      opacity: 0.2;
       max-width: 80%;
       pointer-events: none;
+      z-index: 0;
     }
 
     .contenedor {
@@ -32,29 +32,26 @@
       margin: 50px auto;
       padding: 20px;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
+      border-radius: 10px;
       position: relative;
       z-index: 2;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
     }
 
     .tarjeta, .producto {
       background: white;
       color: black;
-      padding: 14px 18px;
+      padding: 15px;
       margin: 10px 0;
       border-radius: 10px;
-      font-weight: 600;
       cursor: pointer;
-      transition: background 0.25s;
       text-align: center;
+      font-weight: bold;
+      transition: 0.3s;
     }
 
-    .tarjeta:hover, .producto:hover { background: #e3f2fd; }
+    .tarjeta:hover, .producto:hover {
+      background: #d0f0ff;
+    }
 
     #popupCantidad {
       display: none;
@@ -63,7 +60,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      padding: 22px;
+      padding: 20px;
       border-radius: 10px;
       z-index: 9999;
       color: black;
@@ -72,165 +69,182 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
-    #popupCantidad h3 {
-      margin-top: 0;
-      text-align: center;
-      color: #0d47a1;
-    }
-
-    #popupCantidad input {
+    input {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
+      margin-top: 10px;
     }
 
-    #popupCantidad button {
+    button {
       padding: 10px 20px;
-      margin: 5px;
+      margin: 10px 5px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    #popupCantidad .cancelar { background: #ccc; color: black; }
-    #popupCantidad .agregar { background: #0d47a1; color: white; }
+    .cancelar { background: #aaa; }
+    .agregar { background: #00416A; color: white; }
 
+    h2 { text-align: center; }
   </style>
 </head>
+
 <body>
 
-  <img src="logo_proveedora.png" class="marca-agua">
+<img src="logo_proveedora.png" class="marca-agua">
 
-  <!-- TARJETAS PRINCIPALES -->
-  <div class="contenedor" id="pantalla">
-    <h2>Selecciona una línea</h2>
-    <div id="listaLineas"></div>
+<div class="contenedor" id="pantallaLineas">
+  <h2>Selecciona una línea</h2>
+  <div id="listaLineas"></div>
+</div>
+
+<div class="contenedor" id="pantallaProductos" style="display:none;">
+  <h2 id="tituloProductos"></h2>
+  <div id="listaProductos"></div>
+</div>
+
+<!-- POPUP -->
+<div id="popupCantidad">
+  <h3>Agregar cantidad</h3>
+  <p id="productoSeleccionado"></p>
+  <input type="number" id="inputCantidad" placeholder="Cantidad">
+  
+  <div style="text-align:right;">
+    <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
+    <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
   </div>
+</div>
 
-  <!-- PRODUCTOS DE LA LÍNEA -->
-  <div class="contenedor" id="productos" style="display:none;">
-    <h2 id="tituloProductos"></h2>
-    <div id="listaProductos"></div>
-  </div>
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- POPUP CANTIDAD -->
-  <div id="popupCantidad">
-    <h3>Agregar cantidad</h3>
-    <p id="nombreProductoSeleccionado"></p>
-    <input type="number" id="inputCantidad" placeholder="Cantidad">
-    <div style="text-align: right;">
-      <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
-      <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
-    </div>
-  </div>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } 
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// === CONFIG FIREBASE ===
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
   projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.firebasestorage.app",
+  storageBucket: "inventariopv-643f1.appspot.com",
   messagingSenderId: "96242533231",
   appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 let productos = [];
+let productosPorLinea = {};
+let lineaActual = "";
+let productoActual = null;
 
-// === CARGAR LÍNEAS DINÁMICAS DE ZAPATA V2 ===
-async function cargarLineas() {
-  const contenedor = document.getElementById("listaLineas");
-  contenedor.innerHTML = "";
+// 🔥 1. Cargar productos desde Firestore AUTOMÁTICO
+async function cargarProductos() {
+  const ref = db.collection("almacenes")
+    .doc("almacen_zapataV2")
+    .collection("entradas")
+    .doc("1zcLCf1aUSVVFIZohpe5");
 
-  const colRef = collection(db, "almacenes", "almacen_zapataV2", "entradas");
-  const snap = await getDocs(colRef);
+  const snap = await ref.get();
 
-  productos = [];
-  let lineas = new Set();
+  if (!snap.exists) {
+    alert("No existe inventario en esa ruta.");
+    return;
+  }
 
-  snap.forEach(doc => {
-    const p = doc.data();
-    if (p.linea && p.descripcion && p.codigo) {
-      const ln = p.linea.trim().toUpperCase();
-      productos.push({ ...p, linea: ln });
-      lineas.add(ln);
+  const data = snap.data();
+
+  productos = Object.keys(data).map(id => ({
+    codigo: data[id].codigobarras,
+    nombre: data[id].descripcion,
+    linea: data[id].linea
+  }));
+
+  agruparPorLinea();
+  mostrarLineas();
+}
+
+// 🔥 2. Agrupar por línea
+function agruparPorLinea() {
+  productosPorLinea = {};
+
+  productos.forEach(p => {
+    if (!productosPorLinea[p.linea]) {
+      productosPorLinea[p.linea] = [];
     }
+    productosPorLinea[p.linea].push(p);
   });
+}
 
-  const ordenadas = [...lineas].sort();
+// 🔥 3. Mostrar tarjetas de líneas
+function mostrarLineas() {
+  const cont = document.getElementById("listaLineas");
+  cont.innerHTML = "";
 
-  ordenadas.forEach(linea => {
+  Object.keys(productosPorLinea).forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
     div.textContent = linea;
     div.onclick = () => mostrarProductos(linea);
-    contenedor.appendChild(div);
+    cont.appendChild(div);
   });
 }
 
-// === MOSTRAR PRODUCTOS DE LA LÍNEA ===
+// 🔥 4. Mostrar productos de la línea seleccionada
 function mostrarProductos(linea) {
-  document.getElementById("pantalla").style.display = "none";
+  lineaActual = linea;
+  document.getElementById("pantallaLineas").style.display = "none";
+  document.getElementById("pantallaProductos").style.display = "block";
+
+  document.getElementById("tituloProductos").textContent = linea;
+
   const lista = document.getElementById("listaProductos");
   lista.innerHTML = "";
 
-  const filtrados = productos.filter(p => p.linea === linea);
-
-  filtrados.forEach(p => {
+  productosPorLinea[linea].forEach(prod => {
     const div = document.createElement("div");
     div.className = "producto";
-    div.textContent = p.descripcion;
-    div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+    div.textContent = `${prod.nombre} (Código: ${prod.codigo})`;
+    div.onclick = () => abrirPopup(prod);
     lista.appendChild(div);
   });
-
-  document.getElementById("tituloProductos").textContent = linea;
-  document.getElementById("productos").style.display = "block";
 }
 
-// === POPUP CANTIDAD ===
-let productoSeleccionado = null;
-
-function agregarCantidad(nombre, codigo) {
-  productoSeleccionado = { nombre, codigo };
-  document.getElementById("nombreProductoSeleccionado").textContent = nombre;
-  document.getElementById("inputCantidad").value = "";
+// POPUP CONTROL
+function abrirPopup(prod) {
+  productoActual = prod;
+  document.getElementById("productoSeleccionado").textContent =
+    `${prod.nombre} (${prod.codigo})`;
   document.getElementById("popupCantidad").style.display = "block";
 }
 
-function cerrarPopup() {
+function cerrarPopup() { 
   document.getElementById("popupCantidad").style.display = "none";
 }
 
+// 🔥 5. Guardar al carrito y continuar
 function confirmarCantidad() {
-  const cantidad = parseInt(document.getElementById("inputCantidad").value);
-  if (isNaN(cantidad) || cantidad <= 0) return alert("Cantidad inválida.");
+  const cant = parseInt(document.getElementById("inputCantidad").value);
 
-  const { nombre, codigo } = productoSeleccionado;
+  if (!cant || cant <= 0) return alert("Cantidad inválida.");
 
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-  carrito.push({ nombre, codigo, cantidad });
+
+  carrito.push({
+    nombre: productoActual.nombre,
+    codigo: productoActual.codigo,
+    cantidad: cant
+  });
+
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
   cerrarPopup();
+
   window.location.href = "pantalla3.html";
 }
 
-// EXPONER
-window.cerrarPopup = cerrarPopup;
-window.confirmarCantidad = confirmarCantidad;
-
-cargarLineas();
-
+cargarProductos();
 </script>
+
 </body>
 </html>
