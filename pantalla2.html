@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Agregar productos - Zapata (Automático)</title>
+  <title>Agregar productos - Zapata</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -22,9 +22,9 @@
       left: 50%;
       transform: translate(-50%, -50%);
       opacity: 0.2;
+      z-index: 0;
       max-width: 80%;
       pointer-events: none;
-      z-index: 0;
     }
 
     .contenedor {
@@ -37,20 +37,25 @@
       z-index: 2;
     }
 
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
     .tarjeta, .producto {
       background: white;
       color: black;
-      padding: 15px;
+      padding: 15px 20px;
       margin: 10px 0;
       border-radius: 10px;
-      cursor: pointer;
-      text-align: center;
       font-weight: bold;
+      cursor: pointer;
       transition: 0.3s;
+      text-align: center;
     }
 
     .tarjeta:hover, .producto:hover {
-      background: #d0f0ff;
+      background: #e0f7fa;
     }
 
     #popupCantidad {
@@ -60,7 +65,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      padding: 20px;
+      padding: 25px;
       border-radius: 10px;
       z-index: 9999;
       color: black;
@@ -69,166 +74,177 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
+    #popupCantidad h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #0d47a1;
     }
 
-    button {
+    #popupCantidad input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    #popupCantidad button {
       padding: 10px 20px;
-      margin: 10px 5px;
+      margin: 5px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    .cancelar { background: #aaa; }
-    .agregar { background: #00416A; color: white; }
+    .cancelar {
+      background: #ccc;
+      color: black;
+    }
 
-    h2 { text-align: center; }
+    .agregar {
+      background: #0d47a1;
+      color: white;
+    }
   </style>
 </head>
-
 <body>
 
-<img src="logo_proveedora.png" class="marca-agua">
+  <img src="logo_proveedora.png" class="marca-agua" alt="Marca de agua">
 
-<div class="contenedor" id="pantallaLineas">
-  <h2>Selecciona una línea</h2>
-  <div id="listaLineas"></div>
-</div>
-
-<div class="contenedor" id="pantallaProductos" style="display:none;">
-  <h2 id="tituloProductos"></h2>
-  <div id="listaProductos"></div>
-</div>
-
-<!-- POPUP -->
-<div id="popupCantidad">
-  <h3>Agregar cantidad</h3>
-  <p id="productoSeleccionado"></p>
-  <input type="number" id="inputCantidad" placeholder="Cantidad">
-  
-  <div style="text-align:right;">
-    <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
-    <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
+  <!-- PANTALLA DE LÍNEAS -->
+  <div class="contenedor" id="pantalla">
+    <h2>Selecciona una línea</h2>
+    <div id="listaLineas"></div>
   </div>
-</div>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- PANTALLA DE PRODUCTOS -->
+  <div class="contenedor" id="productos" style="display:none;">
+    <h2 id="tituloProductos"></h2>
+    <div id="listaProductos"></div>
+  </div>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-  authDomain: "inventariopv-643f1.firebaseapp.com",
-  projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.appspot.com",
-  messagingSenderId: "96242533231",
-  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
-};
+  <!-- POPUP -->
+  <div id="popupCantidad">
+    <h3>Agregar cantidad</h3>
+    <p id="nombreProductoSeleccionado"></p>
+    <input type="number" id="inputCantidad" placeholder="Cantidad">
+    <div style="text-align:right;">
+      <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
+      <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
+    </div>
+  </div>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
-let lineasMap = {}; 
-let productosAgrupados = {};
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-async function cargarLineas() {
+  <script>
+  // CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+    authDomain: "inventariopv-643f1.firebaseapp.com",
+    projectId: "inventariopv-643f1",
+    storageBucket: "inventariopv-643f1.appspot.com",
+    messagingSenderId: "96242533231",
+    appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
+  };
 
-  const ref = db
-    .collection("almacenes")
-    .doc("almacen_zapataV2")
-    .collection("entradas")
-    .doc("1zcLCf1aUSVVFIZohpe5")
-    .collection("productos");
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  const snap = await ref.get();
+  let productosAgrupados = {};
+  let productoSeleccionado = null;
 
-  productosAgrupados = {};
+  async function cargarLineas() {
+    const ref = db
+      .collection("almacenes")
+      .doc("almacen_zapataV2")
+      .collection("entradas")
+      .doc("1zcLCf1aUSVVFIZohpe5")
+      .collection("productos");
 
-  snap.forEach(doc => {
-    const data = doc.data();
+    const snap = await ref.get();
 
-    const linea = (data.linea || "SIN LINEA").trim();
-    const nombre = data.descripcion || "";
-    const codigo = data.codigoBarras || "";
+    productosAgrupados = {};
 
-    if (!productosAgrupados[linea]) productosAgrupados[linea] = [];
+    snap.forEach(doc => {
+      const data = doc.data();
 
-    productosAgrupados[linea].push({
-      nombre,
-      codigo
+      const linea = (data.linea || "SIN LINEA").trim();
+      const nombre = data.descripcion;
+      const codigo = data.codigoBarra || data.codbarras || data.codigoBarras || "";
+
+      if (!productosAgrupados[linea]) productosAgrupados[linea] = [];
+
+      productosAgrupados[linea].push({ nombre, codigo });
     });
-  });
 
-  mostrarLineas();
-}
-
-function mostrarLineas() {
-  const contenedor = document.getElementById("listaLineas");
-  contenedor.innerHTML = "";
-
-  Object.keys(productosAgrupados).forEach(linea => {
-    const div = document.createElement("div");
-    div.className = "tarjeta";
-    div.textContent = linea;
-    div.onclick = () => mostrarProductos(linea);
-    contenedor.appendChild(div);
-  });
-}
-
-function mostrarProductos(linea) {
-  document.getElementById("pantalla").style.display = "none";
-  document.getElementById("productos").style.display = "block";
-  document.getElementById("tituloProductos").textContent = "Productos - " + linea;
-
-  const cont = document.getElementById("listaProductos");
-  cont.innerHTML = "";
-
-  productosAgrupados[linea].forEach(p => {
-    const div = document.createElement("div");
-    div.className = "producto";
-    div.textContent = `${p.nombre} (Código: ${p.codigo})`;
-    div.onclick = () => abrirPopup(p.nombre, p.codigo);
-    cont.appendChild(div);
-  });
-}
-
-function abrirPopup(nombre, codigo) {
-  productoSeleccionado = { nombre, codigo };
-  document.getElementById("nombreProductoSeleccionado").textContent = nombre;
-  document.getElementById("inputCantidad").value = "";
-  document.getElementById("popupCantidad").style.display = "block";
-}
-
-function cerrarPopup() {
-  document.getElementById("popupCantidad").style.display = "none";
-}
-
-function confirmarCantidad() {
-  const cantidad = parseFloat(document.getElementById("inputCantidad").value);
-
-  if (isNaN(cantidad) || cantidad <= 0) {
-    alert("Ingresa una cantidad válida.");
-    return;
+    mostrarLineas();
   }
 
-  let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-  carrito.push({
-    nombre: productoSeleccionado.nombre,
-    codigo: productoSeleccionado.codigo,
-    cantidad
-  });
-  localStorage.setItem("carrito", JSON.stringify(carrito));
+  function mostrarLineas() {
+    const cont = document.getElementById("listaLineas");
+    cont.innerHTML = "";
 
-  cerrarPopup();
-  window.location.href = "pantalla3.html";
-}
+    Object.keys(productosAgrupados).forEach(linea => {
+      const div = document.createElement("div");
+      div.className = "tarjeta";
+      div.textContent = linea;
+      div.onclick = () => mostrarProductos(linea);
+      cont.appendChild(div);
+    });
+  }
 
-document.addEventListener("DOMContentLoaded", cargarLineas);
-</script>
+  function mostrarProductos(linea) {
+    document.getElementById("pantalla").style.display = "none";
+    document.getElementById("productos").style.display = "block";
+    document.getElementById("tituloProductos").textContent = "Productos - " + linea;
+
+    const cont = document.getElementById("listaProductos");
+    cont.innerHTML = "";
+
+    productosAgrupados[linea].forEach(p => {
+      const div = document.createElement("div");
+      div.className = "producto";
+      div.textContent = `${p.nombre} (Código: ${p.codigo})`;
+      div.onclick = () => abrirPopup(p.nombre, p.codigo);
+      cont.appendChild(div);
+    });
+  }
+
+  function abrirPopup(nombre, codigo) {
+    productoSeleccionado = { nombre, codigo };
+    document.getElementById("nombreProductoSeleccionado").textContent = nombre;
+    document.getElementById("popupCantidad").style.display = "block";
+  }
+
+  function cerrarPopup() {
+    document.getElementById("popupCantidad").style.display = "none";
+  }
+
+  function confirmarCantidad() {
+    const cantidad = parseFloat(document.getElementById("inputCantidad").value);
+
+    if (!cantidad || cantidad <= 0) {
+      alert("Ingresa una cantidad válida");
+      return;
+    }
+
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    carrito.push({
+      nombre: productoSeleccionado.nombre,
+      codigo: productoSeleccionado.codigo,
+      cantidad
+    });
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+
+    cerrarPopup();
+    window.location.href = "pantalla3.html"; // ← AQUÍ VA A PANTALLA 3
+  }
+
+  document.addEventListener("DOMContentLoaded", cargarLineas);
+  </script>
+
 </body>
 </html>
