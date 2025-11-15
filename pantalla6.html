@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+
     body { 
       font-family: Arial, sans-serif; 
       background: linear-gradient(to right, #00416A, #E4E5E6); 
@@ -63,10 +64,50 @@
       background: #007bff;
     }
 
+    /* =======================================================
+       🧾 IMPRESIÓN TÉRMICA 58 mm — Epson TM-T20III
+       ======================================================= */
     @media print {
-      button, .no-print { display: none !important; }
-      body { background: white !important; }
+
+      body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .resumen {
+        width: 280px !important; /* ancho ticket 58mm */
+        padding: 10px !important;
+        margin: 0 auto !important;
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+        border-radius: 0 !important;
+      }
+
+      h2 {
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+      }
+
+      ul li {
+        background: none !important;
+        padding: 4px 0 !important;
+        border: none !important;
+        font-size: 11px !important;
+      }
+
+      .firmas img {
+        width: 95% !important;
+        height: 60px !important;
+        border: 1px solid #000 !important;
+        filter: contrast(180%);
+      }
+
+      button, .no-print {
+        display: none !important;
+      }
     }
+
   </style>
 </head>
 
@@ -89,12 +130,11 @@
   <div class="firmas">
     <div>
       <p>Firma quien entrega</p>
-      <img id="firmaEntrega" src="">
+      <img id="firmaEntrega">
     </div>
-
     <div>
       <p>Firma quien recibe</p>
-      <img id="firmaRecibe" src="">
+      <img id="firmaRecibe">
     </div>
   </div>
 
@@ -102,12 +142,16 @@
   <button class="secondary no-print" onclick="imprimir()">🖨️ Imprimir</button>
 </div>
 
-<!-- MODAL CINCHO -->
+
+<!-- ==================== MODAL CINCHO ==================== -->
+
 <div id="modalCincho" class="no-print" 
      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
             background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999;">
+
   <div style="background:white; color:black; padding:20px; border-radius:10px; width:90%; max-width:350px; text-align:center;">
     <h3>🚚 Folio de Cincho</h3>
+
     <input id="folioCinchoInput" type="text" placeholder="Ej. CIN-10023" 
            style="width:80%; padding:8px; border:1px solid #ccc; border-radius:5px;"><br><br>
 
@@ -116,17 +160,21 @@
     </label>
 
     <br><br>
-    <button onclick="confirmarCincho()" style="background:#007bff;color:white;padding:10px;margin-right:5px;">Continuar</button>
-    <button onclick="cerrarModalCincho()" style="background:#888;color:white;padding:10px;">Cancelar</button>
+    <button onclick="confirmarCincho()" 
+            style="background:#007bff;color:white;padding:10px;margin-right:5px;">Continuar</button>
+    <button onclick="cerrarModalCincho()" 
+            style="background:#888;color:white;padding:10px;">Cancelar</button>
   </div>
+
 </div>
 
+<!-- ==================== Firebase ==================== -->
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -138,30 +186,51 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+
 let numeroFolio = 0;
 let folio = "";
 
-// OBTENER SIGUIENTE FOLIO
+
+// ======================================================
+// OBTENER FOLIO AUTOMÁTICO
+// ======================================================
 async function obtenerFolio() {
   const ref = db.collection("consecutivos").doc("salidas_zapata");
-
   const snap = await ref.get();
+
   numeroFolio = (snap.exists ? snap.data().ultimo : 0) + 1;
 
   folio = "PDDZAP - " + String(numeroFolio).padStart(4, "0");
   document.getElementById("folio").textContent = folio;
 }
 
-// MOSTRAR DATOS
+
+// ======================================================
+// Cargar los datos del resumen
+// ======================================================
 function cargarResumen() {
-  document.getElementById("fecha").textContent = localStorage.getItem("fecha") || "";
-  document.getElementById("entrega").textContent = localStorage.getItem("entrega") || "";
-  document.getElementById("recibe").textContent = localStorage.getItem("recibe") || "";
-  document.getElementById("destino").textContent = localStorage.getItem("destino") || "";
 
-  document.getElementById("firmaEntrega").src = localStorage.getItem("firmaEntrega");
-  document.getElementById("firmaRecibe").src = localStorage.getItem("firmaRecibe");
+  document.getElementById("fecha").textContent =
+    localStorage.getItem("resumenFecha") ||
+    localStorage.getItem("fecha") ||
+    "";
 
+  document.getElementById("entrega").textContent =
+    localStorage.getItem("entrega") || "";
+
+  document.getElementById("recibe").textContent =
+    localStorage.getItem("recibe") || "";
+
+  document.getElementById("destino").textContent =
+    localStorage.getItem("destino") || "";
+
+  document.getElementById("firmaEntrega").src =
+    localStorage.getItem("firmaEntrega") || "";
+
+  document.getElementById("firmaRecibe").src =
+    localStorage.getItem("firmaRecibe") || "";
+
+  // artículos
   const lista = JSON.parse(localStorage.getItem("carrito") || "[]");
   const ul = document.getElementById("lista-articulos");
 
@@ -170,9 +239,19 @@ function cargarResumen() {
     li.textContent = `${p.cantidad} x ${p.nombre} (Código: ${p.codigo})`;
     ul.appendChild(li);
   });
+
+  // mostrar cincho si existe
+  const cincho = localStorage.getItem("folioCincho") || "";
+  if (cincho !== "") {
+    document.getElementById("folioCinchoMostrar").textContent =
+      "🚚 Folio de Cincho: " + cincho;
+  }
 }
 
-// MOSTRAR MODAL CINCHO
+
+// ======================================================
+// Modal Cincho
+// ======================================================
 function guardarSalida() {
   document.getElementById("modalCincho").style.display = "flex";
 }
@@ -193,11 +272,15 @@ async function confirmarCincho() {
   await guardarEnFirebase(cincho, noCamion);
 }
 
+
+// ======================================================
 // GUARDAR EN FIRESTORE
+// ======================================================
 async function guardarEnFirebase(folioCincho, noCamion) {
+
   const salida = {
     folio,
-    fecha: localStorage.getItem("fecha"),
+    fecha: document.getElementById("fecha").textContent,
     entrega: localStorage.getItem("entrega"),
     recibe: localStorage.getItem("recibe"),
     destino: localStorage.getItem("destino"),
@@ -220,22 +303,25 @@ async function guardarEnFirebase(folioCincho, noCamion) {
 
     alert("Salida guardada correctamente.");
 
-    // limpiar localStorage
-    localStorage.removeItem("carrito");
-    localStorage.removeItem("firmaEntrega");
-    localStorage.removeItem("firmaRecibe");
-
+    localStorage.clear();
     window.location.href = "index.html";
+
   } catch (error) {
     console.error(error);
     alert("Error al guardar.");
   }
 }
 
+
+// ======================================================
+// IMPRIMIR TICKET
+// ======================================================
 function imprimir() {
   window.print();
 }
 
+
+// ======================================================
 document.addEventListener("DOMContentLoaded", async () => {
   await obtenerFolio();
   cargarResumen();
