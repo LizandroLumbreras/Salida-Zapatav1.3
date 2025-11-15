@@ -28,7 +28,7 @@
     }
 
     .contenedor {
-      max-width: 600px;
+      max-width: 650px;
       margin: 50px auto;
       padding: 20px;
       background: rgba(255, 255, 255, 0.1);
@@ -42,20 +42,35 @@
       margin-bottom: 20px;
     }
 
-    .tarjeta, .producto {
+    .tarjeta {
       background: white;
       color: black;
-      padding: 15px 20px;
+      padding: 15px;
       margin: 10px 0;
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
       text-align: center;
+      transition: background 0.3s;
     }
 
-    .tarjeta:hover, .producto:hover {
+    .tarjeta:hover {
       background: #e0f7fa;
+    }
+
+    .producto {
+      background: white;
+      color: black;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-size: 15px;
+    }
+
+    .producto:hover {
+      background: #d4f1ff;
     }
 
     #popupCantidad {
@@ -65,7 +80,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      padding: 25px;
+      padding: 20px;
       border-radius: 10px;
       z-index: 9999;
       color: black;
@@ -104,147 +119,260 @@
       background: #0d47a1;
       color: white;
     }
+
   </style>
 </head>
+
 <body>
 
-  <img src="logo_proveedora.png" class="marca-agua" alt="Marca de agua">
+<img src="logo_proveedora.png" class="marca-agua">
 
-  <!-- PANTALLA DE LÍNEAS -->
-  <div class="contenedor" id="pantalla">
-    <h2>Selecciona una línea</h2>
-    <div id="listaLineas"></div>
+<div class="contenedor" id="pantallaLineas">
+  <h2>Selecciona una línea</h2>
+  <div id="listaLineas"></div>
+</div>
+
+<div class="contenedor" id="pantallaProductos" style="display:none;">
+  <h2 id="tituloLinea"></h2>
+  <div id="listaProductos"></div>
+</div>
+
+<!-- POPUP -->
+<div id="popupCantidad">
+  <h3>Agregar cantidad</h3>
+  <p id="nombreProductoSeleccionado"></p>
+  <input type="number" id="inputCantidad" placeholder="Cantidad">
+  <div style="text-align:right;">
+    <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
+    <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
   </div>
+</div>
 
-  <!-- PANTALLA DE PRODUCTOS -->
-  <div class="contenedor" id="productos" style="display:none;">
-    <h2 id="tituloProductos"></h2>
-    <div id="listaProductos"></div>
-  </div>
+<script>
 
-  <!-- POPUP -->
-  <div id="popupCantidad">
-    <h3>Agregar cantidad</h3>
-    <p id="nombreProductoSeleccionado"></p>
-    <input type="number" id="inputCantidad" placeholder="Cantidad">
-    <div style="text-align:right;">
-      <button class="cancelar" onclick="cerrarPopup()">Cancelar</button>
-      <button class="agregar" onclick="confirmarCantidad()">Agregar</button>
-    </div>
-  </div>
+// ============================
+//   LISTA COMPLETA (133)
+// ============================
 
+const productos = [
+  { codigo: "355", descripcion: "REYMA CHAROLA 066 C/500 BLANCA", linea: "REYMA CHAROLA" },
+  { codigo: "357", descripcion: "REYMA CHAROLA 07 C/500 BLANCA", linea: "REYMA CHAROLA" },
+  { codigo: "363", descripcion: "REYMA CHAROLA 105 C/500", linea: "REYMA CHAROLA" },
+  { codigo: "364", descripcion: "REYMA CHAROLA 835 C/500", linea: "REYMA CHAROLA" },
+  { codigo: "365", descripcion: "REYMA CHAROLA 855 C/500 BLA CHR855BL500", linea: "REYMA CHAROLA" },
+  { codigo: "1347", descripcion: "REYMA CHAROLA 855 C/500 AMARILLA", linea: "REYMA CHAROLA" },
+  { codigo: "1502", descripcion: "REYMA VASO PLASTICO No.12 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "1623", descripcion: "REYMA VASO PLASTICO No.14 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "1680", descripcion: "REYMA CHAROLA HAMBURGUESERA C/125", linea: "REYMA CONTENEDOR" },
+  { codigo: "2096", descripcion: "REYMA CHAROLA 8X8 DIV C/200 BLANCA", linea: "REYMA CONTENEDOR" },
+  { codigo: "2097", descripcion: "REYMA CHAROLA 9X9 DIV C/200", linea: "REYMA CONTENEDOR" },
+  { codigo: "2178", descripcion: "CHAROLA REYMA 9H C/200 BLANCA", linea: "REYMA CHAROLA" },
+  { codigo: "2188", descripcion: "REYMA PLATO TERMICO 09 DIV 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2190", descripcion: "REYMA PLATO TERMICO 08 LISO 25/20", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2350", descripcion: "REYMA CHAROLA 07 C/500 ROSA", linea: "REYMA CHAROLA" },
+  { codigo: "2351", descripcion: "REYMA CHAROLA 07 C/500 AZUL", linea: "REYMA CHAROLA" },
+  { codigo: "2382", descripcion: "AGUA GYM - STAR 12/1.5 lts", linea: "LIQUIDO" },
+  { codigo: "2395", descripcion: "REYMA VASO PLASTICO No. 5.5 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "2397", descripcion: "VASO PLASTICO REYMA 05 AZUL 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "2408", descripcion: "REYMA PLATO TERMICO 08 DIV 25/20", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2409", descripcion: "REYMA PLATO TERMICO PH6 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2410", descripcion: "REYMA PLATO TERMICO PH8 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2411", descripcion: "REYMA PLATO TERMICO 06 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "2825", descripcion: "ENVASE JUGUERO 1LT C/192", linea: "LIQUIDO" },
+  { codigo: "3062", descripcion: "AGUA GYM 24/500 ML", linea: "LIQUIDO" },
+  { codigo: "3217", descripcion: "AGUA GYM-STAR 12/ 1L", linea: "LIQUIDO" },
+  { codigo: "3251", descripcion: "ENVASE JUGUERO 1/2 LTO C/200 PZA", linea: "LIQUIDO" },
+  { codigo: "3261", descripcion: "PAPEL ALTA DENCIDAD 30X40 REYMA", linea: "REYMA" },
+  { codigo: "3614", descripcion: "REYMA PLATO TERMICO 10 LISO 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "3864", descripcion: "CHAROLA REYMA # 9H AMARILLA C/200", linea: "REYMA CHAROLA" },
+  { codigo: "3987", descripcion: "REYMA PLATO TERMICO 10 DIV 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "4395", descripcion: "REYMA VASO PLASTICO No.16 40/25 BARRIL", linea: "REYMA VASO PLASTICO" },
+  { codigo: "4410", descripcion: "REYMA VASO PLASTICO No.08 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "4664", descripcion: "BOLSA PLANA 60X90 CAL. 150", linea: "BOLSA PLASTICA" },
+  { codigo: "4898", descripcion: "REYMA VASO PLASTICO No.06 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "5078", descripcion: "REYMA VASO PLASTICO No.10 20/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "5282", descripcion: "CHAROLA CONVERMEX 066 C/500", linea: "CONVERMEX" },
+  { codigo: "5283", descripcion: "CONVERMEX CHAROLA 855 C/500", linea: "CONVERMEX" },
+  { codigo: "7016", descripcion: "MARIEL CHAROLA 855 C/500", linea: "REYMA CHAROLA" },
+  { codigo: "7417", descripcion: "REYMA CHAROLA 835 C/TAPA C/500", linea: "REYMA CHAROLA" },
+  { codigo: "7689", descripcion: "REYMA CHAROLA 7X7 DIV C/200", linea: "REYMA CONTENEDOR" },
+  { codigo: "7692", descripcion: "CHAROLA REYMA 855 C/50 AZUL", linea: "REYMA CHAROLA" },
+  { codigo: "13978", descripcion: "LUCKY PLAS CHAROLA 7X7 C/100", linea: "LUCKY PLAST" },
+  { codigo: "18905", descripcion: "CHAROLA 6X6 ECOLOGICA HAMBURGUESERA", linea: "REYMA BIO" },
+  { codigo: "020002", descripcion: "REYMA CHAROLA 8S C/50", linea: "REYMA CHAROLA" },
+  { codigo: "020003", descripcion: "REYMA CHAROLA 855 C/50 ROJA", linea: "REYMA CHAROLA" },
+  { codigo: "020004", descripcion: "REYMA CHAROLA 9H C/25 8/25", linea: "REYMA CHAROLA" },
+  { codigo: "020013", descripcion: "REYMA PLATO TERMICO PH10 20/25", linea: "REYMA PLATO TERMICO" },
+  { codigo: "020030", descripcion: "CAMISETA CHICA NEGRA AD MACIAS", linea: "BOLSA PLASTICA" },
+  { codigo: "020054", descripcion: "JAGUAR PLATO 08 LISO 25/20", linea: "JAGUAR" },
+  { codigo: "020100", descripcion: "HIELERA CHICA C/ASA BLANCA", linea: "CONVERMEX" },
+  { codigo: "020124", descripcion: "REYMA CHAROLA 855 C/500 NEGRA", linea: "REYMA CHAROLA" },
+  { codigo: "020247", descripcion: "TAPA ENVASE JUGUERO COLORES", linea: "LIQUIDO" },
+  { codigo: "020251", descripcion: "BIOSPLAST VASO PLASTICO 10 C/1000", linea: "BIOPLAST" },
+  { codigo: "020270", descripcion: "REYMA CHAROLA 7X7 NEGRA C/200", linea: "REYMA CHAROLA" },
+  { codigo: "020297", descripcion: "REYMA CHAROLA 7X7 LISA C/200 BIODEGRADA", linea: "REYMA BIO" },
+  { codigo: "020314", descripcion: "REYMA CHAROLA 9X9 DIV PZA BIODEGRADABLE", linea: "REYMA BIO" },
+  { codigo: "020318", descripcion: "MARIEL CHAROLA 855 C/500 BIODEGRADABLE", linea: "REYMA BIO" },
+  { codigo: "020319", descripcion: "MARIEL CHAROLA 066 C/500 BIODEGRADABLE", linea: "REYMA BIO" },
+  { codigo: "020328", descripcion: "REYMA ENVASE PLASTICO 250 ML c/5 PZA", linea: "REYMA VASO PLASTICO" },
+  { codigo: "050001", descripcion: "REYMA CHAROLA 855 C/50 ROSA", linea: "REYMA CHAROLA" },
+  { codigo: "060028", descripcion: "BIG COLA 3 LTS C/6", linea: "LIQUIDO" },
+  { codigo: "066500", descripcion: "CHAROLA BIOSPLAST 066 C/500 BIO", linea: "BIOPLAST" },
+  { codigo: "104104", descripcion: "CONVERMEX VASO TERMI. No 104 40/25", linea: "CONVERMEX" },
+  { codigo: "106106", descripcion: "CONVERMEX VASO TERMI. No 106 40/25", linea: "CONVERMEX" },
+  { codigo: "108108", descripcion: "CONVERMEX VASO TERMI. No 108 20/25", linea: "CONVERMEX" },
+  { codigo: "110110", descripcion: "CONVERMEX VASO TERMI. No 110 40/25", linea: "CONVERMEX" },
+  { codigo: "112112", descripcion: "CONVERMEX VASO TERMI. No 112 40/25", linea: "CONVERMEX" },
+  { codigo: "114114", descripcion: "CONVERMEX VASO TERMI. No 114 20/25", linea: "CONVERMEX" },
+  { codigo: "116116", descripcion: "CONVERMEX VASO TERMI. No 116 25/20", linea: "CONVERMEX" },
+  { codigo: "120120", descripcion: "CONVERMEX VASO TERMI. No 120 25/20", linea: "CONVERMEX" },
+  { codigo: "132132", descripcion: "CONVERMEX VASO TERMI. No 132 20/15", linea: "VASO EU" },
+  { codigo: "134060", descripcion: "BOLSA DE ROLLO 40X60 ALTA DENCIDAD", linea: "BOLSA PLASTICA" },
+  { codigo: "141825", descripcion: "BOLSA PLANA 18X25 CAL. 150", linea: "BOLSA PLASTICA" },
+  { codigo: "142535", descripcion: "BOLSA PLANA 25X35 CAL. 150", linea: "BOLSA PLASTICA" },
+  { codigo: "142540", descripcion: "BOLSA PLANA 25X40", linea: "BOLSA PLASTICA" },
+  { codigo: "143050", descripcion: "BOLSA PLANA 30X50 CAL. 150", linea: "BOLSA PLASTICA" },
+  { codigo: "161616", descripcion: "BIOSPLAST VASO PLASTICO 16L C/1000", linea: "BIOPLAST" },
+  { codigo: "210004", descripcion: "JUGO CHECHI C/24 DE 140 ML", linea: "LIQUIDO" },
+  { codigo: "210010", descripcion: "BIG CIFRUT 625 /12", linea: "LIQUIDO" },
+  { codigo: "408408", descripcion: "CONVERMEX TAPA 408 PLASTICA 20/50", linea: "CONVERMEX" },
+  { codigo: "410410", descripcion: "CONVERMEX TAPA 410 PLASTICA 20/50", linea: "CONVERMEX" },
+  { codigo: "412412", descripcion: "CONVERMEX TAPA 412 PLASTICA 20/50", linea: "CONVERMEX" },
+  { codigo: "414414", descripcion: "CONVERMEX TAPA 414 PLASTICA 20/50", linea: "CONVERMEX" },
+  { codigo: "416416", descripcion: "CONVERMEX TAPA 416 PLASTICA 20/50", linea: "CONVERMEX" },
+  { codigo: "450065", descripcion: "REYMA CHAROLA 8X8 C/200 NEGRA", linea: "REYMA CONTENEDOR" },
+  { codigo: "450079", descripcion: "POPOTE ESTUCHADO 21 REYMA 4/500 BIODEG", linea: "REYMA" },
+  { codigo: "450081", descripcion: "POPOTE ESTUCHADO 26 REYMA 4/500 BIODEG", linea: "REYMA" },
+  { codigo: "450086", descripcion: "VASO PLASTICO REYMA 16 EU 20/50", linea: "VASO EU" },
+  { codigo: "450087", descripcion: "VASO PLASTICO REYMA 32 EU 20/25", linea: "REYMA VASO PLASTICO" },
+  { codigo: "450091", descripcion: "VASO PLASTICO REYMA 10 EU 20/50", linea: "VASO EU" },
+  { codigo: "450095", descripcion: "TAPA 32 EU REYMA 20/25 TP32EUR", linea: "VASO EU" },
+  { codigo: "516516", descripcion: "CONVERMEX TAPA 516 TERMICA 10/50", linea: "CONVERMEX" },
+  { codigo: "706706", descripcion: "CONVERMEX ENVA TERMI. No 706 40/25", linea: "CONVERMEX" },
+  { codigo: "0707500", descripcion: "REYMA CHAROLA 07 C/500 NEGRA", linea: "REYMA CHAROLA" },
+  { codigo: "708708", descripcion: "CONVERMEX ENVA TERMI. No 708 40/25", linea: "CONVERMEX" },
+  { codigo: "712712", descripcion: "CONVERMEX ENVA TERMI. No 712 40/25", linea: "CONVERMEX" },
+  { codigo: "716716", descripcion: "CONVERMEX ENVA TERMI. No 716 20/25", linea: "CONVERMEX" },
+  { codigo: "732732", descripcion: "CONVERMEX ENVA TERMI. No 732 20/15 PROVS", linea: "CONVERMEX" },
+  { codigo: "750178", descripcion: "REYMA CHAROLA 9X9 C/200 NEGRA", linea: "REYMA CONTENEDOR" },
+  { codigo: "750182", descripcion: "CHAROLA HAMBURGUESERA NEGRA C/500", linea: "REYMA CHAROLA" },
+  { codigo: "760760", descripcion: "ENVASE TERM. CONVERMEX 760 30/10", linea: "CONVERMEX" },
+  { codigo: "855500", descripcion: "CHAROLA BIOSPLAST 855 C/500 oferta", linea: "BIOPLAST" },
+  { codigo: "880210", descripcion: "CHAROLA BIOS 8X8 DIV C/10 BIO OFERTA", linea: "CONTENEDOR BIO" },
+  { codigo: "990110", descripcion: "CHAROLA BIOS 9X9 LISA C/10 OFERTA", linea: "CONTENEDOR BIO" },
+  { codigo: "7503033", descripcion: "BIG CIFRUT KID 300 ML C/15 SABORES", linea: "LIQUIDO" },
+  { codigo: "7701200", descripcion: "CHAROLA BIOS 7X7 LISA C/200 OFERTA", linea: "CONTENEDOR BIO" },
+  { codigo: "7702200", descripcion: "CHAROLA BIOS 7X7 DIV C/200 OFERTA", linea: "CONTENEDOR BIO" },
+  { codigo: "8801200", descripcion: "CHAROLA BIOS 8X8 LISA C/200 BIO", linea: "CONTENEDOR BIO" },
+  { codigo: "32322050", descripcion: "TAPA EU REYMA 20/50 16EU RANURADA", linea: "VASO EU" },
+  { codigo: "50161800", descripcion: "LUCKY PLAS CHAROLA 855 C/500", linea: "LUCKY PLAST" },
+  { codigo: "1386413864", descripcion: "REYMA VASO PLASTICO No.16 40/25 LARGO", linea: "REYMA VASO PLASTICO" },
+  { codigo: "041165941777", descripcion: "BIOSPLAST VASO PLASTICO 12 C/1000", linea: "BIOPLAST" },
+  { codigo: "75022088021", descripcion: "TAPA PLAST/REYMA P/ ENV.1/2-1L CAJA", linea: "VASO EU" },
+  { codigo: "0643131523408", descripcion: "BIOSPLAST VASO PLASTICO 14 C/1000", linea: "BIOPLAST" },
+  { codigo: "752216095737", descripcion: "VASO PLASTICO JAGUAR 16 LARGO C/25", linea: "JAGUAR" },
+  { codigo: "20007330110008", descripcion: "LUCKY PLAS CHAROLA 8X8 C/100", linea: "LUCKY PLAST" },
+  { codigo: "7502208800152", descripcion: "REYMA ENVASE PLASTICO 500 ML PZA", linea: "REYMA VASO PLASTICO" },
+  { codigo: "7502208800176", descripcion: "VASO TERMICO REYMA # 06 C/25 VTR6P", linea: "REYMA VASO TERMICO" },
+  { codigo: "7502208800237", descripcion: "VASO TERMICO REYMA # 16 C/20 VTR16P", linea: "REYMA VASO TERMICO" },
+  { codigo: "7502208802378", descripcion: "VASO PLASTICO REYMA 12 EU C/50", linea: "REYMA VASO PLASTICO" },
+  { codigo: "7502208802385", descripcion: "VASO PLASTICO REYMA 14 EU C/50", linea: "VASO EU" },
+  { codigo: "7502208802705", descripcion: "TAPA DOMO EU C/50 REYMA TPDEU", linea: "VASO EU" },
+  { codigo: "7502208804747", descripcion: "CAMISETA MINI POLISEDA", linea: "BOLSA PLASTICA" },
+  { codigo: "7502208804990", descripcion: "REYMA CHAROLA 7X7 DIV C/50 BIODEGRADABL", linea: "REYMA BIO" },
+  { codigo: "7503020773853", descripcion: "CAMISETA CHICA POLISEDA", linea: "BOLSA PLASTICA" },
+  { codigo: "7503020773860", descripcion: "CAMISETA MEDIANA POLISEDA", linea: "BOLSA PLASTICA" },
+  { codigo: "7503020773877", descripcion: "CAMISETA GRANDE POLISEDA", linea: "BOLSA PLASTICA" },
+  { codigo: "7503027332022", descripcion: "MAJORE PLATO PH8 C/25", linea: "MAJORE" }
+];
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+// =======================
+// AGRUPAR POR LÍNEA
+// =======================
+const lineasMap = {};
 
-  <script>
-  // CONFIG
-  const firebaseConfig = {
-    apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-    authDomain: "inventariopv-643f1.firebaseapp.com",
-    projectId: "inventariopv-643f1",
-    storageBucket: "inventariopv-643f1.appspot.com",
-    messagingSenderId: "96242533231",
-    appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
-  };
+productos.forEach(p => {
+  if (!lineasMap[p.linea]) lineasMap[p.linea] = [];
+  lineasMap[p.linea].push(p);
+});
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+// Ordenar productos por descripción
+Object.keys(lineasMap).forEach(linea => {
+  lineasMap[linea].sort((a,b)=>a.descripcion.localeCompare(b.descripcion));
+});
 
-  let productosAgrupados = {};
-  let productoSeleccionado = null;
+// =======================
+// MOSTRAR LÍNEAS
+// =======================
+const listaLineas = document.getElementById("listaLineas");
+Object.keys(lineasMap).forEach(linea => {
+  const div = document.createElement("div");
+  div.className = "tarjeta";
+  div.textContent = linea;
+  div.onclick = () => mostrarProductos(linea);
+  listaLineas.appendChild(div);
+});
 
-  async function cargarLineas() {
-    const ref = db
-      .collection("almacenes")
-      .doc("almacen_zapataV2")
-      .collection("entradas")
-      .doc("1zcLCf1aUSVVFIZohpe5")
-      .collection("productos");
+// =======================
+// MOSTRAR PRODUCTOS
+// =======================
+function mostrarProductos(linea) {
+  document.getElementById("pantallaLineas").style.display = "none";
+  document.getElementById("pantallaProductos").style.display = "block";
 
-    const snap = await ref.get();
+  document.getElementById("tituloLinea").textContent = linea;
 
-    productosAgrupados = {};
+  const cont = document.getElementById("listaProductos");
+  cont.innerHTML = "";
 
-    snap.forEach(doc => {
-      const data = doc.data();
+  lineasMap[linea].forEach(prod => {
+    const item = document.createElement("div");
+    item.className = "producto";
+    item.textContent = `${prod.descripcion} (Código: ${prod.codigo})`;
+    item.onclick = () => abrirPopup(prod);
+    cont.appendChild(item);
+  });
+}
 
-      const linea = (data.linea || "SIN LINEA").trim();
-      const nombre = data.descripcion;
-      const codigo = data.codigoBarra || data.codbarras || data.codigoBarras || "";
+// =======================
+// POPUP DE CANTIDAD
+// =======================
+let productoSeleccionado = null;
 
-      if (!productosAgrupados[linea]) productosAgrupados[linea] = [];
+function abrirPopup(prod) {
+  productoSeleccionado = prod;
+  document.getElementById("nombreProductoSeleccionado").textContent = prod.descripcion;
+  document.getElementById("inputCantidad").value = "";
+  document.getElementById("popupCantidad").style.display = "block";
+}
 
-      productosAgrupados[linea].push({ nombre, codigo });
-    });
+function cerrarPopup() {
+  document.getElementById("popupCantidad").style.display = "none";
+}
 
-    mostrarLineas();
+function confirmarCantidad() {
+  const cantidad = parseFloat(document.getElementById("inputCantidad").value);
+
+  if(isNaN(cantidad) || cantidad <= 0) {
+    alert("Ingresa una cantidad válida.");
+    return;
   }
 
-  function mostrarLineas() {
-    const cont = document.getElementById("listaLineas");
-    cont.innerHTML = "";
+  let carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
 
-    Object.keys(productosAgrupados).forEach(linea => {
-      const div = document.createElement("div");
-      div.className = "tarjeta";
-      div.textContent = linea;
-      div.onclick = () => mostrarProductos(linea);
-      cont.appendChild(div);
-    });
-  }
+  carrito.push({
+    nombre: productoSeleccionado.descripcion,
+    codigo: productoSeleccionado.codigo,
+    cantidad: cantidad
+  });
 
-  function mostrarProductos(linea) {
-    document.getElementById("pantalla").style.display = "none";
-    document.getElementById("productos").style.display = "block";
-    document.getElementById("tituloProductos").textContent = "Productos - " + linea;
+  localStorage.setItem("carrito", JSON.stringify(carrito));
 
-    const cont = document.getElementById("listaProductos");
-    cont.innerHTML = "";
+  cerrarPopup();
+  window.location.href = "pantalla3.html";
+}
 
-    productosAgrupados[linea].forEach(p => {
-      const div = document.createElement("div");
-      div.className = "producto";
-      div.textContent = `${p.nombre} (Código: ${p.codigo})`;
-      div.onclick = () => abrirPopup(p.nombre, p.codigo);
-      cont.appendChild(div);
-    });
-  }
-
-  function abrirPopup(nombre, codigo) {
-    productoSeleccionado = { nombre, codigo };
-    document.getElementById("nombreProductoSeleccionado").textContent = nombre;
-    document.getElementById("popupCantidad").style.display = "block";
-  }
-
-  function cerrarPopup() {
-    document.getElementById("popupCantidad").style.display = "none";
-  }
-
-  function confirmarCantidad() {
-    const cantidad = parseFloat(document.getElementById("inputCantidad").value);
-
-    if (!cantidad || cantidad <= 0) {
-      alert("Ingresa una cantidad válida");
-      return;
-    }
-
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    carrito.push({
-      nombre: productoSeleccionado.nombre,
-      codigo: productoSeleccionado.codigo,
-      cantidad
-    });
-
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-
-    cerrarPopup();
-    window.location.href = "pantalla3.html"; // ← AQUÍ VA A PANTALLA 3
-  }
-
-  document.addEventListener("DOMContentLoaded", cargarLineas);
-  </script>
+</script>
 
 </body>
 </html>
