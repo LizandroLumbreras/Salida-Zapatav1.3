@@ -1,216 +1,187 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Carrito – Salida Zapata V2</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Artículos agregados - Zapata</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(to right, #00416A, #E4E5E6);
-    margin: 0;
-    padding: 20px;
-    color: white;
-    min-height: 100vh;
-  }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00416A, #E4E5E6);
+      margin: 0;
+      padding: 20px;
+      color: white;
+      min-height: 100vh;
+      position: relative;
+      box-sizing: border-box;
+    }
 
-  .contenedor {
-    max-width: 600px;
-    margin: auto;
-    background: rgba(255,255,255,0.12);
-    padding: 25px;
-    border-radius: 12px;
-    backdrop-filter: blur(12px);
-  }
+    .marca-agua {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.20;
+      max-width: 80%;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  h2 { text-align: center; margin-bottom: 25px; }
+    .contenedor {
+      max-width: 800px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 2;
+      position: relative;
+    }
 
-  .item {
-    background: white;
-    color: black;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      text-align: center;
+    }
 
-  .btn {
-    background: #d32f2f;
-    color: white;
-    padding: 12px;
-    width: 100%;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    margin-top: 15px;
-  }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
 
-  .btn:hover { background: #b71c1c; cursor: pointer; }
+    li {
+      background: white;
+      color: black;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
 
-  .eliminar {
-    background: #b71c1c;
-    color: white;
-    border: none;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
 
-  .folio {
-    font-size: 16px;
-    text-align: center;
-    background: rgba(255,255,255,0.2);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-  }
-</style>
+    .editar { background: #f57c00; color: white; }
+    .eliminar { background: #9e9e9e; color: white; }
 
+    .boton-grande {
+      width: 100%;
+      margin-top: 15px;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      font-weight: bold;
+    }
+
+    .agregar {
+      background: #d32f2f;
+      color: white;
+    }
+
+    .finalizar {
+      background: #388e3c;
+      color: white;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+  </style>
 </head>
+
 <body>
 
+<img src="logo_proveedora.png" class="marca-agua">
+
 <div class="contenedor">
+  <h2>🧾 Artículos agregados</h2>
 
-  <h2>Carrito de Salida</h2>
+  <ul id="listaEditable"></ul>
 
-  <p class="folio">Folio: <strong id="folioMostrar">...</strong></p>
-
-  <div id="listaCarrito"></div>
-
-  <button class="btn" onclick="guardarSalida()">Registrar Salida</button>
-
+  <button class="boton-grande agregar" onclick="window.location.href='pantalla2.html'">➕ Agregar más productos</button>
+  <button class="boton-grande finalizar" onclick="finalizar()">✅ Finalizar y Firmar</button>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<footer>
+  © 2025 Proveedora de Desechables Zapata · Sistema de Inventario · Desarrollado por Adm Sistemas
+</footer>
 
 <script>
-// --- CONFIG FIREBASE ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-  authDomain: "inventariopv-643f1.firebaseapp.com",
-  projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.firebasestorage.app",
-  messagingSenderId: "96242533231",
-  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
-};
+let listaTemporal = JSON.parse(localStorage.getItem("carrito")) || [];
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// Mostrar lista editable
+function actualizarListaEditable() {
+  const ul = document.getElementById("listaEditable");
+  ul.innerHTML = "";
 
-// ======================================================
-// ✔ Cargar y mostrar carrito
-// ======================================================
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-function mostrarCarrito() {
-  const lista = document.getElementById("listaCarrito");
-  lista.innerHTML = "";
-
-  if (carrito.length === 0) {
-    lista.innerHTML = "<p>No hay productos en el carrito.</p>";
+  if (listaTemporal.length === 0) {
+    ul.innerHTML = "<li>No hay productos agregados.</li>";
     return;
   }
 
-  carrito.forEach((item, index) => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    div.innerHTML = `
-      <div>
-        <strong>${item.nombre}</strong><br>
-        <small>Código: ${item.codigo}</small><br>
-        <small>Cantidad: ${item.cantidad}</small>
-      </div>
-      <button class="eliminar" onclick="eliminar(${index})">X</button>
+  listaTemporal.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>• ${item.cantidad} x ${item.nombre}</strong>
+      <br><small>Código: ${item.codigo}</small><br><br>
+      <button class="editar" onclick="editarCantidad(${index})">✏️ Editar</button>
+      <button class="eliminar" onclick="eliminarProducto(${index})">🗑️ Eliminar</button>
     `;
-
-    lista.appendChild(div);
+    ul.appendChild(li);
   });
 }
 
-function eliminar(i) {
-  carrito.splice(i, 1);
-  localStorage.setItem("carrito", JSON.stringify(carrito));
-  mostrarCarrito();
+// Editar cantidad
+function editarCantidad(index) {
+  const nuevaCantidad = prompt("Nueva cantidad:", listaTemporal[index].cantidad);
+
+  if (nuevaCantidad !== null && !isNaN(nuevaCantidad) && parseInt(nuevaCantidad) > 0) {
+    listaTemporal[index].cantidad = parseInt(nuevaCantidad);
+    guardarLista();
+    actualizarListaEditable();
+  } else {
+    alert("Cantidad inválida.");
+  }
 }
 
-// ======================================================
-// ✔ Guardar salida en Firestore
-// ======================================================
-async function guardarSalida() {
-  if (carrito.length === 0)
-    return alert("El carrito está vacío.");
+// Eliminar producto
+function eliminarProducto(index) {
+  if (confirm("¿Eliminar este producto?")) {
+    listaTemporal.splice(index, 1);
+    guardarLista();
+    actualizarListaEditable();
+  }
+}
 
+function guardarLista() {
+  localStorage.setItem("carrito", JSON.stringify(listaTemporal));
+}
+
+// Continuar a firma
+function finalizar() {
+  const fecha = localStorage.getItem("fecha");
   const entrega = localStorage.getItem("entrega");
   const recibe = localStorage.getItem("recibe");
-  const destino = localStorage.getItem("destino");
-  const fecha = localStorage.getItem("fecha");
-  const folio = document.getElementById("folioMostrar").textContent;
 
-  if (!entrega || !recibe || !destino)
-    return alert("Faltan datos iniciales.");
+  localStorage.setItem("resumenFecha", fecha);
+  localStorage.setItem("resumenEntrega", entrega);
+  localStorage.setItem("resumenRecibe", recibe);
 
-  // ✔ Registrar cada movimiento en el almacén_zapataV2
-  for (const p of carrito) {
-    await db.collection("almacenes")
-            .doc("almacen_zapataV2")
-            .collection("entradas")
-            .add({
-              fecha: fecha,
-              folio: folio,
-              entrega,
-              recibe,
-              destino,
-              codigo: p.codigo,
-              descripcion: p.nombre,
-              cantidad: p.cantidad,
-              tipoMovimiento: "salida"
-            });
-  }
-
-  // ✔ Actualizar consecutivo
-  const docRef = db.collection("consecutivos").doc("salidas_zapata");
-  const snap = await docRef.get();
-
-  let nuevo = 1;
-  if (snap.exists) nuevo = (snap.data().ultimo || 1) + 1;
-
-  await docRef.set({ ultimo: nuevo }, { merge: true });
-
-  // ✔ Limpiar carrito
-  localStorage.removeItem("carrito");
-
-  alert("Salida registrada correctamente.");
-  window.location.href = "index.html";
+  window.location.href = "pantalla4.html";
 }
 
-// ======================================================
-// ✔ Obtener folio
-// ======================================================
-async function cargarFolio() {
-  const docRef = db.collection("consecutivos").doc("salidas_zapata");
-  const doc = await docRef.get();
-  let n = 1;
-
-  if (doc.exists) n = doc.data().ultimo || 1;
-
-  const folio = "PDDZAP - " + String(n).padStart(4, "0");
-  document.getElementById("folioMostrar").textContent = folio;
-}
-
-// ======================================================
-// INIT
-// ======================================================
-document.addEventListener("DOMContentLoaded", () => {
-  cargarFolio();
-  mostrarCarrito();
-});
-
+actualizarListaEditable();
 </script>
 
 </body>
