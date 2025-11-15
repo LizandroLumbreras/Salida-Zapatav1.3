@@ -1,33 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Salida – Almacén Zapata V2</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#00416A">
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
-
-  <!-- ESTILOS MODERNOS -->
+  <meta charset="UTF-8" />
+  <title>Registro de Salida - Zapata</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00416A, #E4E5E6);
+      padding: 20px;
       margin: 0;
-      padding: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #00375f, #0b7aaa);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       color: white;
+      min-height: 100vh;
+      box-sizing: border-box;
       position: relative;
-      overflow-x: hidden;
+    }
+
+    input[list], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+      color: black;
     }
 
     .marca-agua {
@@ -35,222 +32,189 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      opacity: 0.15;
-      width: 70%;
-      max-width: 600px;
-      pointer-events: none;
+      opacity: 0.20;
       z-index: 0;
+      max-width: 80%;
+      pointer-events: none;
     }
 
-    .card {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 28px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 450px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    .contenedor {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      position: relative;
       z-index: 2;
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      font-weight: 600;
-      letter-spacing: 1px;
     }
 
     label {
-      font-size: 15px;
-      margin-top: 12px;
       display: block;
-      font-weight: 500;
+      margin-bottom: 8px;
     }
 
-    input, select {
+    select, input[type="date"] {
       width: 100%;
-      padding: 12px;
-      font-size: 15px;
+      padding: 10px;
+      border-radius: 6px;
       border: none;
-      border-radius: 8px;
-      margin-top: 6px;
+      font-size: 16px;
+      margin-bottom: 20px;
       box-sizing: border-box;
       color: black;
     }
 
-    .btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      margin-top: 20px;
-      background: #d32f2f;
+    .boton {
+      background-color: #d32f2f;
       color: white;
       border: none;
-      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 6px;
       cursor: pointer;
-      font-weight: bold;
-      transition: 0.25s;
+      width: 100%;
     }
 
-    .btn:hover {
-      background: #b71c1c;
-      transform: scale(1.02);
+    .boton:hover {
+      background-color: #b71c1c;
     }
 
     .folio {
-      font-size: 16px;
-      text-align: center;
-      margin-bottom: 15px;
-      background: rgba(255,255,255,0.18);
-      padding: 10px;
-      border-radius: 8px;
-      letter-spacing: 1px;
-    }
-
-    a.manual {
-      text-align: center;
-      display: block;
-      margin-top: 18px;
-      padding: 12px;
-      text-decoration: none;
-      background: #00416A;
-      border-radius: 8px;
-      color: white;
+      margin-bottom: 20px;
       font-weight: bold;
-      transition: 0.25s;
     }
-
-    a.manual:hover {
-      background: #002f4a;
-    }
-
   </style>
 </head>
 
 <body>
 
-<img src="logo_proveedora.png" class="marca-agua">
+  <img src="logo_proveedora.png" alt="Marca de agua" class="marca-agua">
 
-<div class="card">
+  <div class="contenedor">
+    <h2>Registrar salida - Zapata</h2>
 
-  <h2>Registrar Salida</h2>
+    <p class="folio">📌 Folio próximo: <strong id="proximoFolio">Cargando...</strong></p>
 
-  <p class="folio">Folio próximo: <strong id="proximoFolio">...</strong></p>
+    <label for="fecha">Fecha:</label>
+    <input type="date" id="fecha" readonly>
 
-  <label>Fecha</label>
-  <input type="date" id="fecha" readonly>
+    <!-- ENTREGA -->
+    <label for="entrega">Entrega:</label>
+    <select id="entrega">
+      <option value="">Selecciona quien entrega</option>
+      <option value="Jose Maria (Chema)">Jose Maria (Chema)</option>
+      <option value="Alfredo Medina Garcia">Alfredo Medina Garcia</option>
+    </select>
 
-  <label>Entrega</label>
-  <select id="entrega">
-    <option value="">Selecciona quien entrega</option>
-    <option value="Jose Maria (Chema)">Jose Maria (Chema)</option>
-    <option value="Alfredo Medina Garcia">Alfredo Medina Garcia</option>
-  </select>
+    <!-- RECIBE -->
+    <label for="recibe">Recibe:</label>
+    <input list="recibe-lista" id="recibe" name="recibe" placeholder="Selecciona o escribe nombre" />
 
-  <label>Recibe</label>
-  <input list="recibe-lista" id="recibe" placeholder="Selecciona o escribe nombre">
-  <datalist id="recibe-lista">
-    <option value="Luis Miguel Medellin Escalona">
-    <option value="Sergio Becerra Maravilla">
-    <option value="Eduardo Cuellar Vazquez">
-    <option value="Fernando Flores de la Cerda">
-    <option value="David Wenseslao Morales Martinez">
-  </datalist>
+    <datalist id="recibe-lista">
+      <option value="Luis Miguel Medellin Escalona">
+      <option value="Sergio Becerra Maravilla">
+      <option value="Eduardo Cuellar Vazquez">
+      <option value="Fernando Flores de la Cerda">
+      <option value="David Wenseslao Morales Martinez">
+    </datalist>
 
-  <label>Destino</label>
-  <input list="destinos" id="destino" placeholder="Selecciona o escribe destino">
-  <datalist id="destinos">
-    <option value="BODEGA MATRIZ MADERO 690">
-    <option value="SUCURSAL GUADALUPE B41">
-    <option value="SUCURSAL MONTEMORELOS">
-    <option value="SUCURSAL ALLENDE 1">
-    <option value="SUCURSAL ALLENDE 2">
-    <option value="SUPER TIENDAS RICO">
-    <option value="ROBERTO YADO">
-    <option value="COMERCIALIZADORA CAVAZOS">
-    <option value="EL PARIENTE ALIMENTOS">
-    <option value="LA MISION SUC DIAZ ORDAZ">
-    <option value="LA MISION SUC VILLEGAS">
-    <option value="LA MISION SUC PETACA">
-    <option value="LA MISION SUC ARBOLEDAS">
-    <option value="LA MISION SUCR MORELOS">
-    <option value="LA MISION SUCR ALLENDE">
-  </datalist>
+    <!-- DESTINO -->
+    <label for="destino">Destino:</label>
+    <input list="destinos" id="destino" name="destino" placeholder="Selecciona o escribe destino" />
 
-  <button class="btn" onclick="continuar()">Continuar</button>
+    <datalist id="destinos">
+      <option value="BODEGA MATRIZ MADERO 690">
+      <option value="SUCURSAL GUADALUPE B41">
+      <option value="SUCURSAL MONTEMORELOS">
+      <option value="SUCURSAL ALLENDE 1">
+      <option value="SUCURSAL ALLENDE 2">
+      <option value="SUPER TIENDAS RICO">
+      <option value="ROBERTO YADO">
+      <option value="COMERCIALIZADORA CAVAZOS">
+      <option value="EL PARIENTE ALIMENTOS">
+      <option value="LA MISION SUC DIAZ ORDAZ">
+      <option value="LA MISION SUC VILLEGAS">
+      <option value="LA MISION SUC PETACA">
+      <option value="LA MISION SUC ARBOLEDAS">
+      <option value="LA MISION SUCR MORELOS">
+      <option value="LA MISION SUCR ALLENDE">
+    </datalist>
 
-  <a href="Manual_Salida_Zapata.pdf" download class="manual">📄 Descargar Manual</a>
+    <button class="boton" onclick="continuar()">Continuar</button>
 
-</div>
+    <a href="Manual_Salida_Zapata.pdf" download style="
+      display:block; margin-top:20px; text-align:center;
+      padding:12px 20px; background:#00416A;
+      color:white; border-radius:6px;
+      text-decoration:none;">
+      📄 Descargar Manual de Uso
+    </a>
+  </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-  authDomain: "inventariopv-643f1.firebaseapp.com",
-  projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.firebasestorage.app",
-  messagingSenderId: "96242533231",
-  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
-};
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+      authDomain: "inventariopv-643f1.firebaseapp.com",
+      projectId: "inventariopv-643f1",
+      storageBucket: "inventariopv-643f1.firebasestorage.app",
+      messagingSenderId: "96242533231",
+      appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// Obtener siguiente folio
-async function cargarFolio() {
-  const docRef = db.collection("consecutivos").doc("salidas_zapata");
-  const docSnap = await docRef.get();
-  let numero = 1;
+    async function cargarFolio() {
+      const docRef = db.collection("consecutivos").doc("salidas_zapata");
+      const docSnap = await docRef.get();
 
-  if (docSnap.exists) numero = docSnap.data().ultimo || 1;
+      let numero = 1;
+      if (docSnap.exists) numero = docSnap.data().ultimo || 1;
 
-  const folio = "PDDZAP - " + String(numero).padStart(4, "0");
-  document.getElementById("proximoFolio").textContent = folio;
-}
+      const folioFinal = "PDDZAP - " + String(numero).padStart(4, "0");
+      document.getElementById("proximoFolio").textContent = folioFinal;
 
-// Fecha automática
-function ponerFechaHoy() {
-  const hoy = new Date();
-  const yyyy = hoy.getFullYear();
-  const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-  const dd = String(hoy.getDate()).padStart(2, '0');
-  document.getElementById("fecha").value = `${yyyy}-${mm}-${dd}`;
-}
+      localStorage.setItem("folio", folioFinal);
+    }
 
-// Guardar y continuar
-function continuar() {
-  const entrega = document.getElementById("entrega").value;
-  const recibe = document.getElementById("recibe").value.trim();
-  const destino = document.getElementById("destino").value.trim();
+    function ponerFechaHoy() {
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
 
-  if (!entrega || !recibe || !destino)
-    return alert("Completa todos los campos.");
+      const fecha = `${yyyy}-${mm}-${dd}`;
+      document.getElementById("fecha").value = fecha;
 
-  localStorage.setItem("entrega", entrega);
-  localStorage.setItem("recibe", recibe);
-  localStorage.setItem("destino", destino);
+      localStorage.setItem("fecha", fecha);
+    }
 
-  // Conectar con pantalla moderna que ya te hice
-  window.location.href = "salida_zapataV2.html";
-}
+    function continuar() {
+      const entrega = document.getElementById("entrega").value;
+      const recibe = document.getElementById("recibe").value;
+      const destino = document.getElementById("destino").value;
 
-// Init
-document.addEventListener("DOMContentLoaded", () => {
-  cargarFolio();
-  ponerFechaHoy();
-});
-</script>
+      if (!entrega || !recibe || !destino) {
+        alert("Por favor completa todos los campos.");
+        return;
+      }
+
+      localStorage.setItem("entrega", entrega);
+      localStorage.setItem("recibe", recibe);
+      localStorage.setItem("destino", destino);
+
+      window.location.href = "pantalla2.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      cargarFolio();
+      ponerFechaHoy();
+    });
+  </script>
 
 </body>
 </html>
