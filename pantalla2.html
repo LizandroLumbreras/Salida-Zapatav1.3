@@ -133,118 +133,102 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let productos = [];
-let productosPorLinea = {};
-let lineaActual = "";
-let productoActual = null;
+let lineasMap = {}; 
+let productosAgrupados = {};
 
-// 🔥 1. Cargar productos desde Firestore AUTOMÁTICO
-async function cargarProductos() {
-  const ref = db.collection("almacenes")
+async function cargarLineas() {
+
+  const ref = db
+    .collection("almacenes")
     .doc("almacen_zapataV2")
     .collection("entradas")
-    .doc("1zcLCf1aUSVVFIZohpe5");
+    .doc("1zcLCf1aUSVVFIZohpe5")
+    .collection("productos");
 
   const snap = await ref.get();
 
-  if (!snap.exists) {
-    alert("No existe inventario en esa ruta.");
-    return;
-  }
+  productosAgrupados = {};
 
-  const data = snap.data();
+  snap.forEach(doc => {
+    const data = doc.data();
 
-  productos = Object.keys(data).map(id => ({
-    codigo: data[id].codigobarras,
-    nombre: data[id].descripcion,
-    linea: data[id].linea
-  }));
+    const linea = (data.linea || "SIN LINEA").trim();
+    const nombre = data.descripcion || "";
+    const codigo = data.codigoBarras || "";
 
-  agruparPorLinea();
+    if (!productosAgrupados[linea]) productosAgrupados[linea] = [];
+
+    productosAgrupados[linea].push({
+      nombre,
+      codigo
+    });
+  });
+
   mostrarLineas();
 }
 
-// 🔥 2. Agrupar por línea
-function agruparPorLinea() {
-  productosPorLinea = {};
-
-  productos.forEach(p => {
-    if (!productosPorLinea[p.linea]) {
-      productosPorLinea[p.linea] = [];
-    }
-    productosPorLinea[p.linea].push(p);
-  });
-}
-
-// 🔥 3. Mostrar tarjetas de líneas
 function mostrarLineas() {
-  const cont = document.getElementById("listaLineas");
-  cont.innerHTML = "";
+  const contenedor = document.getElementById("listaLineas");
+  contenedor.innerHTML = "";
 
-  Object.keys(productosPorLinea).forEach(linea => {
+  Object.keys(productosAgrupados).forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
     div.textContent = linea;
     div.onclick = () => mostrarProductos(linea);
+    contenedor.appendChild(div);
+  });
+}
+
+function mostrarProductos(linea) {
+  document.getElementById("pantalla").style.display = "none";
+  document.getElementById("productos").style.display = "block";
+  document.getElementById("tituloProductos").textContent = "Productos - " + linea;
+
+  const cont = document.getElementById("listaProductos");
+  cont.innerHTML = "";
+
+  productosAgrupados[linea].forEach(p => {
+    const div = document.createElement("div");
+    div.className = "producto";
+    div.textContent = `${p.nombre} (Código: ${p.codigo})`;
+    div.onclick = () => abrirPopup(p.nombre, p.codigo);
     cont.appendChild(div);
   });
 }
 
-// 🔥 4. Mostrar productos de la línea seleccionada
-function mostrarProductos(linea) {
-  lineaActual = linea;
-  document.getElementById("pantallaLineas").style.display = "none";
-  document.getElementById("pantallaProductos").style.display = "block";
-
-  document.getElementById("tituloProductos").textContent = linea;
-
-  const lista = document.getElementById("listaProductos");
-  lista.innerHTML = "";
-
-  productosPorLinea[linea].forEach(prod => {
-    const div = document.createElement("div");
-    div.className = "producto";
-    div.textContent = `${prod.nombre} (Código: ${prod.codigo})`;
-    div.onclick = () => abrirPopup(prod);
-    lista.appendChild(div);
-  });
-}
-
-// POPUP CONTROL
-function abrirPopup(prod) {
-  productoActual = prod;
-  document.getElementById("productoSeleccionado").textContent =
-    `${prod.nombre} (${prod.codigo})`;
+function abrirPopup(nombre, codigo) {
+  productoSeleccionado = { nombre, codigo };
+  document.getElementById("nombreProductoSeleccionado").textContent = nombre;
+  document.getElementById("inputCantidad").value = "";
   document.getElementById("popupCantidad").style.display = "block";
 }
 
-function cerrarPopup() { 
+function cerrarPopup() {
   document.getElementById("popupCantidad").style.display = "none";
 }
 
-// 🔥 5. Guardar al carrito y continuar
 function confirmarCantidad() {
-  const cant = parseInt(document.getElementById("inputCantidad").value);
+  const cantidad = parseFloat(document.getElementById("inputCantidad").value);
 
-  if (!cant || cant <= 0) return alert("Cantidad inválida.");
+  if (isNaN(cantidad) || cantidad <= 0) {
+    alert("Ingresa una cantidad válida.");
+    return;
+  }
 
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
   carrito.push({
-    nombre: productoActual.nombre,
-    codigo: productoActual.codigo,
-    cantidad: cant
+    nombre: productoSeleccionado.nombre,
+    codigo: productoSeleccionado.codigo,
+    cantidad
   });
-
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
   cerrarPopup();
-
   window.location.href = "pantalla3.html";
 }
 
-cargarProductos();
+document.addEventListener("DOMContentLoaded", cargarLineas);
 </script>
-
 </body>
 </html>
