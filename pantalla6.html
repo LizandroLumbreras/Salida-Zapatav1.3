@@ -169,7 +169,7 @@
 </div>
 
 
- <button class="no-print" onclick="guardarEnFirebase()">💾 Guardar salida</button>
+<button class="no-print" onclick="guardarSalida()">💾 Guardar salida</button>
   <button class="secondary no-print" onclick="imprimir()">🖨️ Imprimir</button>
 </div>
 
@@ -287,10 +287,6 @@ function guardarSalida() {
   document.getElementById("modalCincho").style.display = "flex";
 }
 
-function cerrarModalCincho() {
-  document.getElementById("modalCincho").style.display = "none";
-}
-
 async function confirmarCincho() {
   const cincho = document.getElementById("folioCinchoInput").value.trim();
   const noCamion = document.getElementById("noCamionCheck").checked;
@@ -300,17 +296,21 @@ async function confirmarCincho() {
     return;
   }
 
-  // Guardar cincho en localStorage INMEDIATAMENTE
+  // Guardar cincho en localStorage
   localStorage.setItem("folioCincho", noCamion ? "" : cincho);
 
   document.getElementById("folioCinchoMostrar").textContent =
     noCamion ? "" : ("🚚 Folio de Cincho: " + cincho);
 
   cerrarModalCincho();
+
+  // 🔥 LLAMAR CORRECTAMENTE
+  await guardarEnFirebase(
+    localStorage.getItem("folioCincho") || "",
+    noCamion
+  );
 }
-// ======================================================
-// GUARDAR EN FIRESTORE
-// ======================================================
+
 async function guardarEnFirebase(folioCincho, noCamion) {
 
   const salida = {
@@ -322,7 +322,8 @@ async function guardarEnFirebase(folioCincho, noCamion) {
     articulos: JSON.parse(localStorage.getItem("carrito") || "[]"),
     firmaEntrega: localStorage.getItem("firmaEntrega"),
     firmaRecibe: localStorage.getItem("firmaRecibe"),
-    folioCincho: noCamion ? "" : folioCincho,
+    // 🔥 PROTEGIDO 100% CONTRA undefined
+    folioCincho: folioCincho ?? "",
     timestamp: new Date()
   };
 
@@ -347,7 +348,6 @@ async function guardarEnFirebase(folioCincho, noCamion) {
   }
 }
 
-
 // ======================================================
 // IMPRIMIR TICKET
 // ======================================================
@@ -362,10 +362,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   await obtenerFolio();
   cargarResumen();
 
-  // 🔥 Mostrar modal cincho automáticamente
-  setTimeout(() => {
+// 🔥 SOLO mostrar el modal si NO existe folioCincho guardado
+setTimeout(() => {
+  const cinchoGuardado = localStorage.getItem("folioCincho") || "";
+
+  if (cinchoGuardado === "") {
     document.getElementById("modalCincho").style.display = "flex";
-  }, 400);
+  }
+}, 400);
 });
 </script>
 </body>
